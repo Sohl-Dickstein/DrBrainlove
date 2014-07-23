@@ -407,7 +407,7 @@ def main():
 	print "embedding bars in 2d space"
 	z = embed_bars(X, D)
 
-	target_bars = [1,912,24,354,600,333,666,42]
+	target_bars = range(X.shape[0]) #[1,24,354,600,333,666,42]
 	for ii in target_bars:
 		single_bar_figure(X, z, ii, max_order)
 
