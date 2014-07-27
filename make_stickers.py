@@ -356,24 +356,40 @@ def embed_bars(X, D):
 		return err, derrdz.ravel()
 
 
-	def fix_coord(name, coord, X, z):
-		match = (X['node 1 TLA'] == name) | (X['node 2 TLA'] == name)
-		assert(np.sum(match)>0)
-		z[0,match] = coord[0] + np.random.randn(sum(match),1).ravel()/100.
-		z[1,match] = coord[1] + np.random.randn(sum(match),1).ravel()/100.
+	# def fix_coord(node_number, coord, X, z):
+	# 	match = (X['node 1 TLA'] == name) | (X['node 2 TLA'] == name)
+	# 	assert(np.sum(match)>0)
+	# 	z[0,match] = coord[0] + np.random.randn(sum(match),1).ravel()/100.
+	# 	z[1,match] = coord[1] + np.random.randn(sum(match),1).ravel()/100.
+	def fix_coords(X, z, node_nums, init=False):
+		theta = np.linspace(0, 2.*np.pi, node_nums.shape[0]+1) + np.pi
+		theta = theta[:-1]
+
+		for ii in range(node_nums.shape[0]):
+			match = np.flatnonzero(X['step int'] == node_nums[ii])
+			assert(match.shape[0] == 1)
+			if init:
+				r = 100
+			else:
+				r = np.sqrt(np.sum(z[:,match]**2))
+			z[0,match] = np.cos(theta[ii])*r
+			z[1,match] = np.sin(theta[ii])*r
+			if ii == 0:
+				z[0,match] *= 0.8
+
+
+	fixed_node_nums = np.asarray([356, 357, 544, 653, 675, 669, 659, 631, 616, 617, 625, 635, 663, 647, 641, 567, 377])
 
 	z = np.random.randn(2, X.shape[0])/100.
+	fix_coords(X, z, fixed_node_nums, init=True)
 	for i in range(100):
-		fix_coord('TAT', [1,1], X, z)
-		fix_coord('LID', [1,-1], X, z)
-		fix_coord('APT', [-1,-1], X, z)
-		fix_coord('HAY', [-1,1], X, z)
 		z, _, _ = fmin_l_bfgs_b(
 				f_df,
 				z.ravel(),
 				disp=1,
 				maxfun=5)
 		z = z.reshape((2,-1))
+		fix_coords(X, z, fixed_node_nums)
 
 	z, _, _ = fmin_l_bfgs_b(
 			f_df,
@@ -393,7 +409,12 @@ def embed_bars(X, D):
 		for jj in range(X.shape[0]):
 			if D[ii,jj] == 1:
 				plt.plot([z[0,ii], z[0,jj]], [z[1,ii], z[1,jj]], 'r')
-	plt.plot(z[0,:], z[1,:], '.b')
+	plt.plot(z[0,:], z[1,:], '.g')
+	for ii in range(0, X.shape[0]):
+		if X['step int'][ii] in fixed_node_nums:
+			plt.plot(z[0,ii], z[1,ii], '*b')
+		if X['step int'][ii] == fixed_node_nums[0]:
+			plt.plot(z[0,ii], z[1,ii], '.y')
 
 	return z
 
