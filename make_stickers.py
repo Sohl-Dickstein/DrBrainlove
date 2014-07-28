@@ -37,11 +37,13 @@ for tla in homophonic_node_names:
 	if tla in new_node_names:
 		node_name_mapping[tla] = tla
 		new_node_names -= set([tla])
+		print tla, node_name_mapping[tla]
 # and now assign the rest of the node names
 for tla in homophonic_node_names:
-	if tla not in new_node_names:
+	if tla not in node_name_mapping.keys():
 		node_name_mapping[tla] = new_node_names.pop()
-
+		print tla, node_name_mapping[tla]
+assert(len(new_node_names)==0) # make sure all names were used
 
 def extract_nodes(text):
 	p = re.compile('([a-z]+)[\s\.]+(\d+)[\s\.]+([a-z]+)\s*\=\s*([a-z]+)[\s\.]+(\d+)[\s\.]+([a-z]+)')
