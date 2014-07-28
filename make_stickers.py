@@ -173,9 +173,13 @@ def fill_color(ax, color, alpha=1.):
 	ax.yaxis.set_ticklabels([])
 
 
-def bar_location_diagram(ax, z, ii):
+def bar_location_diagram(ax, z, ii, color):
+	# shape = mpatches.Wedge([0.5, 0.5], 0.4, 190, 170, fill=False, facecolor=color)
+	# ax.add_patch(shape)
 	shape = mpatches.Circle([0.5, 0.5], 0.4, fill=False, linewidth=8)
 	ax.add_patch(shape)
+	# shape = mpatches.Rectangle([0.,0.4], 0.2, 0.2, facecolor=color, color=color, linewidth=0)
+	# ax.add_patch(shape)
 	print [z[0,ii], z[1,ii]]
 	shape = mpatches.Circle([z[0,ii]*0.4+0.5, z[1,ii]*0.4+0.5], 0.1, fill=True, facecolor='black')
 	ax.add_patch(shape)
@@ -198,17 +202,28 @@ def make_node_label(ax, num, x, max_order):
 	txt = plt.text(0.35,0.5, txt_core, fontsize=fontsize_big, horizontalalignment='center',
          verticalalignment='center' ) #,  backgroundcolor='white', color='black')
 
-	txt_order = "%d/%d"%(x["node %d order"%(num)], max_order[tla])
-	txt = plt.text(0.83,0.75, txt_order, fontsize=fontsize_small, horizontalalignment='center',
-         verticalalignment='center' ) #,  backgroundcolor='white', color='black')
-
-	center = [0.83, 0.25]
-	rad = 0.11
-	color = 'white'
+	node_order = x["node %d order"%(num)]
+	# if this was an in node, make it an out node
 	if x["node %d inout"%(num)] == 'IN':
-		draw_arrow_cross(ax, center, rad)
-	else:
-		draw_bullseye(ax, center, rad)
+		node_order = max_order[tla] - node_order + 1
+
+	txt = plt.text(0.83,0.75, "%d"%node_order, fontsize=fontsize_small, horizontalalignment='center',
+         verticalalignment='center' ) #,  backgroundcolor='white', color='black')
+	txt = plt.text(0.83,0.5, "-", fontsize=fontsize_small*2, horizontalalignment='center',
+         verticalalignment='center' ) #,  backgroundcolor='white', color='black')
+	txt = plt.text(0.83,0.25, "%d"%max_order[tla], fontsize=fontsize_small, horizontalalignment='center',
+         verticalalignment='center' ) #,  backgroundcolor='white', color='black')
+	# txt_order = "%d/%d"%(node_order, max_order[tla])
+	# txt = plt.text(0.83,0.75, txt_order, fontsize=fontsize_small, horizontalalignment='center',
+ #         verticalalignment='center' ) #,  backgroundcolor='white', color='black')
+
+	# center = [0.83, 0.25]
+	# rad = 0.11
+	# color = 'white'
+	# if x["node %d inout"%(num)] == 'IN':
+	# 	draw_arrow_cross(ax, center, rad)
+	# else:
+	# 	draw_bullseye(ax, center, rad)
 
 	# TODO replace attr with bar color
 	# TODO add in/out arrow symbol below order
@@ -253,7 +268,7 @@ def single_bar_figure(X, z, ii, max_order):
 	ax = plt.subplot(1, 4, 3)
 	fill_color(ax, 'white')
 	fill_color(ax, color2, alpha=0.6)
-	bar_location_diagram(ax, z, ii)
+	bar_location_diagram(ax, z, ii, color2)
 	ax.axis([0,1, 0, 1])
 
 	plt.subplots_adjust(left=-0.0001, bottom=-0.0001, right=1.0001, top=1.0001, wspace=-0.0001, hspace=-0.0001)
@@ -418,6 +433,12 @@ def embed_bars(X, D):
 
 	return z
 
+
+def max_order_histogram(max_order):
+	histogram = defaultdict(int)
+	for k in max_order.keys():
+		histogram[max_order[k]] += 1
+	print histogram
 
 
 def main():
