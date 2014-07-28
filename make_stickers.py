@@ -42,12 +42,6 @@ for tla in homophonic_node_names:
 	if tla not in new_node_names:
 		node_name_mapping[tla] = new_node_names.pop()
 
-def replace_homophones(tla):
-	if tla in node_name_mapping.keys():
-		return node_name_mapping[tla]
-
-	if 
-
 
 def extract_nodes(text):
 	p = re.compile('([a-z]+)[\s\.]+(\d+)[\s\.]+([a-z]+)\s*\=\s*([a-z]+)[\s\.]+(\d+)[\s\.]+([a-z]+)')
