@@ -29,14 +29,33 @@ def new_node_attributes():
 		}
 node_attributes = defaultdict(new_node_attributes)
 
+homophonic_node_names 	= set(['ABS', 'ABY', 'ACE', 'ACT', 'ADD', 'ADO', 'ADS', 'AFT', 'AGE', 'AGO', 'AID', 'AIL', 'AIM', 'AIR', 'ALE', 'ALL', 'AMP', 'AND', 'ANT', 'ANY', 'APE', 'APT', 'ARC', 'ARE', 'ARK', 'ARM', 'ART', 'ASK', 'ASP', 'ASS', 'COP', 'COT', 'COW', 'COY', 'CRY', 'CUB', 'CUE', 'CUP', 'CUT', 'DAB', 'DAD', 'DAY', 'DEN', 'DEW', 'DIB', 'DID', 'DIE', 'DIG', 'DIM', 'DIN', 'DIP', 'DOE', 'DOG', 'DOT', 'DRY', 'DUB', 'DUD', 'DUE', 'DUG', 'DUH', 'GET', 'GIG', 'GIN', 'GIT', 'GNU', 'GOO', 'GOT', 'GUM', 'GUN', 'GUT', 'GUY', 'GYM', 'HAD', 'HAM', 'HAS', 'HAT', 'HAY', 'HEM', 'HEN', 'HER', 'HEW', 'HEX', 'HEY', 'HID', 'HIM', 'HIP', 'HIS', 'HIT', 'HOE', 'HOG', 'LID', 'LIE', 'LIP', 'LIT', 'LOB', 'LOG', 'LOO', 'LOP', 'LOT', 'LOW', 'LUG', 'LYE', 'MAC', 'MAD', 'MAG', 'MAN', 'MAP', 'MAR', 'MAT', 'MAW', 'MAX', 'MAY', 'MEN', 'MET', 'MIC', 'MID', 'MIT', 'MIX', 'MOB', 'MOD', 'PEN', 'PET', 'PEW', 'PIC', 'PIE', 'PIG', 'PIN', 'PIT', 'PIX', 'PLY', 'POD', 'POI', 'POP', 'POT', 'POW', 'PRO', 'PRY', 'PUB', 'PUG', 'PUN', 'PUP', 'PUT', 'QUO', 'RAD', 'RAG', 'RAM', 'RAN', 'RAP', 'RAT', 'SUP', 'TAB', 'TAD', 'TAG', 'TAN', 'TAP', 'TAR', 'TAT', 'TAX', 'TEA', 'TEE', 'TEN', 'THE', 'TIC', 'TIE', 'TIL', 'TIN', 'TIP', 'TOE', 'TOM', 'TOO', 'TOP', 'TOT', 'TOW', 'TOY', 'TRY', 'TUB', 'TUG', 'TWO',])
+new_node_names 			= set(['ACE', 'ACT', 'ADO', 'AGE', 'AGO', 'AHI', 'AIM', 'AIR', 'ALA', 'ALL', 'AMP', 'ARM', 'ART', 'ASH', 'ASK', 'BAH', 'BAM', 'BAR', 'BED', 'BIO', 'BOA', 'BOX', 'BOY', 'BRO', 'BUG', 'CAB', 'CHI', 'CIS', 'COW', 'COP', 'CUP', 'COY', 'DAD', 'DAY', 'DIG', 'DOG', 'DRY', 'DUB', 'DUH', 'DUI', 'EAR', 'EGG', 'EGO', 'ELF', 'ELK', 'EON', 'ERA', 'ETA', 'EVE', 'EYE', 'FAN', 'FAX', 'FEW', 'FIG', 'FIX', 'FLU', 'FLY', 'FOG', 'FOR', 'FOX', 'FRO', 'FUN', 'GAL', 'GAS', 'GEL', 'GET', 'GIG', 'GIN', 'GOO', 'GUN', 'GUT', 'GYM', 'HAM', 'HAY', 'HEX', 'HIP', 'HIT', 'HOT', 'HOW', 'HUG', 'ICE', 'INK', 'IRE', 'IVY', 'JAM', 'JAR', 'JOB', 'JOY', 'JUG', 'KEG', 'KEY', 'KIT', 'LAB', 'LAM', 'LAW', 'LAX', 'LEG', 'LID', 'LIE', 'LUG', 'MAC', 'MAD', 'MAY', 'MIX', 'MOM', 'MOO', 'MOP', 'NAN', 'NAY', 'NIX', 'NIL', 'NEW', 'NOM', 'NOR', 'OAK', 'OAR', 'ODD', 'OFF', 'OIL', 'OLD', 'ONO', 'ORC', 'OVA', 'PAW', 'PAY', 'PHI', 'PIE', 'PIG', 'PLY', 'POP', 'PRO', 'RAD', 'RAW', 'REF', 'RIB', 'ROB', 'RUG', 'RUM', 'SAD', 'SAW', 'SAY', 'SEX', 'SHY', 'SIP', 'SIR', 'SKY', 'SOY', 'SPY', 'SUN', 'TAG', 'TAU', 'TAR', 'TAX', 'TAT', 'TOY', 'TRY', 'TUB', 'TUX', 'USE', 'VAN', 'VOW', 'WAR', 'WAS', 'WAX', 'WET', 'WHO', 'WHY', 'WIG', 'WIN', 'WIZ', 'WOW', 'YAK', 'YAY', 'YES', 'ZAP', 'ZIG', 'ZOO', 'ZZZ',])
+node_name_mapping = dict()
+# keep as many names as possible the same
+for tla in homophonic_node_names:
+	if tla in new_node_names:
+		node_name_mapping[tla] = tla
+		new_node_names -= set([tla])
+# and now assign the rest of the node names
+for tla in homophonic_node_names:
+	if tla not in new_node_names:
+		node_name_mapping[tla] = new_node_names.pop()
+
+def replace_homophones(tla):
+	if tla in node_name_mapping.keys():
+		return node_name_mapping[tla]
+
+	if 
+
 
 def extract_nodes(text):
 	p = re.compile('([a-z]+)[\s\.]+(\d+)[\s\.]+([a-z]+)\s*\=\s*([a-z]+)[\s\.]+(\d+)[\s\.]+([a-z]+)')
 	m = p.match(text)
-	name1 = m.group(1).upper()
+	name1 = node_name_mapping[m.group(1).upper()]
 	order1 = int(m.group(2))
 	inout1 = m.group(3).upper()
-	name2 = m.group(4).upper()
+	name2 = node_name_mapping[m.group(4).upper()]
 	order2 = int(m.group(5))
 	inout2 = m.group(6).upper()
 	return name1, order1, inout1, name2, order2, inout2
