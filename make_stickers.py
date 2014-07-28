@@ -10,48 +10,24 @@ import matplotlib.patheffects as PathEffects
 import numpy.lib.recfunctions as recfunctions
 from scipy.optimize import fmin_l_bfgs_b
 
-inner_colors = np.random.permutation(matplotlib.colors.cnames.keys())
 outer_colors = np.random.permutation(matplotlib.colors.cnames.keys())
 
 figsize = (15,1.8)
-shape_names = ['circle', 'square', 'arrow', 'pacman', 'half circle', 'triangle', 'pentagon', 'radiation', 'bullseye', 'checkers', 'star', 'equal']
-# shape_names = shape_names[-1:]
 
 fontsize_big = 80
 fontsize_small = 32
 
 def new_node_attributes():
-	global inner_colors
 	global outer_colors
 	scl = 1.
 
-	inner_colors = np.roll(inner_colors, 1)
 	outer_colors = np.roll(outer_colors, -1)
 
 	return {
-		# 'color outer':[np.random.rand()*scl, np.random.rand()*scl, np.random.rand()*scl],
-		# 'color inner':[np.random.rand()*scl, np.random.rand()*scl, np.random.rand()*scl],
-		# 'color inner':inner_colors[0],
 		'color':outer_colors[0],
 		'shape':shape_names[np.random.randint(len(shape_names))]
 		}
 node_attributes = defaultdict(new_node_attributes)
-
-def extract_name_number(text):
-	p = re.compile('([a-z]+)[\s\.]+(\d+)[\s\.]+([a-z]+)')
-	m = p.match(text)
-	name = m.group(1)
-	order = int(m.group(2))
-	inout = m.group(3)
-
-	# print name
-	# print order
-	# print inout
-
-	# name = 'emu'
-	# order = 6
-	# inout = 'in'
-	return name, order, inout
 
 
 def extract_nodes(text):
@@ -63,14 +39,6 @@ def extract_nodes(text):
 	name2 = m.group(4).upper()
 	order2 = int(m.group(5))
 	inout2 = m.group(6).upper()
-
-	# print name
-	# print order
-	# print inout
-
-	# name = 'emu'
-	# order = 6
-	# inout = 'in'
 	return name1, order1, inout1, name2, order2, inout2
 
 
@@ -81,92 +49,9 @@ def extract_step_number(text):
 	return step
 
 
-def add_shape(ax, shapename, color):
-	if shapename == 'circle':
-		shape = mpatches.Circle([0.5,0.5], 0.25, facecolor=color)
-		ax.add_patch(shape)
-	elif shapename == 'square':
-		shape = mpatches.Rectangle([0.25,0.25], 0.5, 0.5, facecolor=color)
-		ax.add_patch(shape)
-	elif shapename == 'equal':
-		shape = mpatches.Rectangle([0.25,0.25], 0.16, 0.5, facecolor=color)
-		ax.add_patch(shape)
-		shape = mpatches.Rectangle([0.75-0.16,0.25], 0.16, 0.5, facecolor=color)
-		ax.add_patch(shape)
-	elif shapename == 'checkers':
-		shape = mpatches.Rectangle([0.25,0.25], 0.25, 0.25, facecolor=color)
-		ax.add_patch(shape)
-		shape = mpatches.Rectangle([0.5,0.5], 0.25, 0.25, facecolor=color)
-		ax.add_patch(shape)
-	elif shapename == 'arrow':
-		shape = mpatches.Arrow(0.25,0.5, 0.5,0, width=1, facecolor=color)
-		ax.add_patch(shape)
-	elif shapename == 'triangle':
-		shape = mpatches.RegularPolygon([0.5, 0.5], 3, 0.25, facecolor=color)
-		ax.add_patch(shape)
-	elif shapename == 'star':
-		shape = mpatches.RegularPolygon([0.5, 0.5], 3, 0.25, orientation=0, facecolor=color)
-		ax.add_patch(shape)
-		shape = mpatches.RegularPolygon([0.5, 0.5], 3, 0.25, orientation=45, facecolor=color)
-		ax.add_patch(shape)
-	elif shapename == 'pentagon':
-		shape = mpatches.RegularPolygon([0.5, 0.5], 5, 0.25, facecolor=color)
-		ax.add_patch(shape)
-	elif shapename == 'pacman':
-		shape = mpatches.Wedge([0.5, 0.5], 0.25, 20, 340, facecolor=color)
-		ax.add_patch(shape)
-	elif shapename == 'half circle':
-		shape = mpatches.Wedge([0.5, 0.5], 0.25, 0, 180, facecolor=color)
-		ax.add_patch(shape)
-	elif shapename == 'radiation':
-		shape = mpatches.Wedge([0.5, 0.5], 0.25, 0, 60, facecolor=color)
-		ax.add_patch(shape)
-		shape = mpatches.Wedge([0.5, 0.5], 0.25, 120, 180, facecolor=color)
-		ax.add_patch(shape)
-		shape = mpatches.Wedge([0.5, 0.5], 0.25, 240, 300, facecolor=color)
-		ax.add_patch(shape)
-	elif shapename == 'bullseye':
-		shape = mpatches.Circle([0.5,0.5], 0.25, facecolor=color)
-		ax.add_patch(shape)
-		shape = mpatches.Circle([0.5,0.5], 0.2, facecolor=color)
-		ax.add_patch(shape)
-		shape = mpatches.Circle([0.5,0.5], 0.15, facecolor=color)
-		ax.add_patch(shape)
-		shape = mpatches.Circle([0.5,0.5], 0.1, facecolor=color)
-		ax.add_patch(shape)
-		shape = mpatches.Circle([0.5,0.5], 0.05, facecolor=color)
-		ax.add_patch(shape)
-
-
-
-def draw_arrow_cross(ax, center, rad):
-	shape = mpatches.Circle(center, rad, fill=False, linewidth=8)
-	ax.add_patch(shape)
-	#plt.Line2D(center[0] + rad*np.array([np.sqrt(2), -np.sqrt(2)]), center[1] + rad*np.array([np.sqrt(2), -np.sqrt(2)]), linewidth=8, color='black')
-	plt.plot(center[0] + 0.86*rad*np.array([1./np.sqrt(2), -1./np.sqrt(2)]), center[1] + rad*np.array([1./np.sqrt(2), -1./np.sqrt(2)]), linewidth=8, color='black')
-	plt.plot(center[0] + 0.86*rad*np.array([-1./np.sqrt(2), 1./np.sqrt(2)]), center[1] + rad*np.array([1./np.sqrt(2), -1./np.sqrt(2)]), linewidth=8, color='black')
-
-
-def draw_bullseye(ax, center, rad):
-	shape = mpatches.Circle(center, rad, fill=False, linewidth=8)
-	ax.add_patch(shape)
-	# shape = mpatches.Circle([0.5,0.5], rad*4/5, facecolor='white')
-	# ax.add_patch(shape)
-	shape = mpatches.Circle(center, rad/5, fill=True, linewidth=8, facecolor='black')
-	ax.add_patch(shape)
-
-
 def fill_color(ax, color, alpha=1.):
-	#facecolor='orange'
 	rect = mpatches.Rectangle([-0.3,-0.3],1.6,1.6, facecolor=color, alpha=alpha )#, ec="none")
 	ax.add_patch(rect)
-	# patches.append(rect)
-	# #colors = [attr['color']]
-	# #colors = np.linspace(0, 1, len(patches))
-	# collection = PatchCollection(patches)#, cmap=plt.cm.hsv)#, alpha=0.3)
-	# #collection.set_array(np.array(colors))
-	# ax.add_collection(collection)
-
 	ax.xaxis.set_ticks_position('none')
 	ax.yaxis.set_ticks_position('none')
 	ax.xaxis.set_ticklabels([])
@@ -174,13 +59,9 @@ def fill_color(ax, color, alpha=1.):
 
 
 def bar_location_diagram(ax, z, ii, color):
-	# shape = mpatches.Wedge([0.5, 0.5], 0.4, 190, 170, fill=False, facecolor=color)
-	# ax.add_patch(shape)
 	shape = mpatches.Circle([0.5, 0.5], 0.4, fill=False, linewidth=8)
 	ax.add_patch(shape)
-	# shape = mpatches.Rectangle([0.,0.4], 0.2, 0.2, facecolor=color, color=color, linewidth=0)
-	# ax.add_patch(shape)
-	print [z[0,ii], z[1,ii]]
+	# print [z[0,ii], z[1,ii]]
 	shape = mpatches.Circle([z[0,ii]*0.4+0.5, z[1,ii]*0.4+0.5], 0.1, fill=True, facecolor='black')
 	ax.add_patch(shape)
 	plt.axis('off')
@@ -193,9 +74,6 @@ def make_node_label(ax, num, x, max_order):
 	attr = node_attributes[tla]
 	fill_color(ax, 'white')
 	fill_color(ax, attr['color'], alpha=0.6)
-
-	# # add a shape
-	# add_shape(ax, attr['shape'], attr['color inner'])
 
 	# add the text
 	txt_core = tla
@@ -213,28 +91,6 @@ def make_node_label(ax, num, x, max_order):
          verticalalignment='center' ) #,  backgroundcolor='white', color='black')
 	txt = plt.text(0.83,0.25, "%d"%max_order[tla], fontsize=fontsize_small, horizontalalignment='center',
          verticalalignment='center' ) #,  backgroundcolor='white', color='black')
-	# txt_order = "%d/%d"%(node_order, max_order[tla])
-	# txt = plt.text(0.83,0.75, txt_order, fontsize=fontsize_small, horizontalalignment='center',
- #         verticalalignment='center' ) #,  backgroundcolor='white', color='black')
-
-	# center = [0.83, 0.25]
-	# rad = 0.11
-	# color = 'white'
-	# if x["node %d inout"%(num)] == 'IN':
-	# 	draw_arrow_cross(ax, center, rad)
-	# else:
-	# 	draw_bullseye(ax, center, rad)
-
-	# TODO replace attr with bar color
-	# TODO add in/out arrow symbol below order
-
-	# txt = plt.text(0.1,0.5,text, fontsize=21, rotation=90,horizontalalignment='center',
- #         verticalalignment='center' ) #,  backgroundcolor='white', color='black')
-	# # txt.set_path_effects([
- # #        PathEffects.Stroke(linewidth=1.1, foreground="w"),
- # #        PathEffects.Stroke(linewidth=1, foreground="black")])
-	# plt.text(0.9,0.5,text, fontsize=21, rotation=-90,horizontalalignment='center',
- #         verticalalignment='center')
 	plt.axis('off')
 
 	return attr['color']
@@ -280,7 +136,7 @@ def single_bar_figure(X, z, ii, max_order):
 
 def load_data(fname='Brain24ft_v0307-Jun-2014 091700_labels.csv'):
 
-	# NOTE "nodes" are actually bars! TODO fix this
+	# NOTE "nodes" are actually bars! TODO fix this naming convention
 
 	X = np.genfromtxt(fname, delimiter=',', names=True, dtype=[('step', '|S50'), ('nodes', '|S50'), ('angles', '|S50'), ('length', '|S50')])
 	X = recfunctions.append_fields(X, 'step int', np.zeros((X.shape[0],), dtype=int))
@@ -371,11 +227,6 @@ def embed_bars(X, D):
 		return err, derrdz.ravel()
 
 
-	# def fix_coord(node_number, coord, X, z):
-	# 	match = (X['node 1 TLA'] == name) | (X['node 2 TLA'] == name)
-	# 	assert(np.sum(match)>0)
-	# 	z[0,match] = coord[0] + np.random.randn(sum(match),1).ravel()/100.
-	# 	z[1,match] = coord[1] + np.random.randn(sum(match),1).ravel()/100.
 	def fix_coords(X, z, node_nums, init=False):
 		theta = np.linspace(0, 2.*np.pi, node_nums.shape[0]+1) + np.pi
 		theta = theta[:-1]
@@ -416,8 +267,6 @@ def embed_bars(X, D):
 	z -= np.mean(z, axis=1).reshape((2,1))
 	z /= np.max(z, axis=1).reshape((2,1))
 
-	# X = recfunctions.append_fields(X, 'z embed', np.zeros((X.shape[0],), dtype=int))
-
 	plt.figure()
 	for ii in range(0, X.shape[0], 20):
 		print "%d / %d"%(ii, X.shape[0])
@@ -435,6 +284,9 @@ def embed_bars(X, D):
 
 
 def max_order_histogram(max_order):
+	"""
+	How many nodes of each cardinality -- for ashley lighting node size email.
+	"""
 	histogram = defaultdict(int)
 	for k in max_order.keys():
 		histogram[max_order[k]] += 1
