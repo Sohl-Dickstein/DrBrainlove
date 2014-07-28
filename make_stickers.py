@@ -25,7 +25,6 @@ def new_node_attributes():
 
 	return {
 		'color':outer_colors[0],
-		'shape':shape_names[np.random.randint(len(shape_names))]
 		}
 node_attributes = defaultdict(new_node_attributes)
 
@@ -315,6 +314,9 @@ def main():
 	D = get_distances(X)
 	print "embedding bars in 2d space"
 	z = embed_bars(X, D)
+
+	print "node counts"
+	max_order_histogram(max_order)
 
 	target_bars = range(X.shape[0]) #[1,24,354,600,333,666,42]
 	for ii in target_bars:
