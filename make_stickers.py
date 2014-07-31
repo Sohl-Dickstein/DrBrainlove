@@ -152,7 +152,7 @@ def single_bar_figure(X, z, ii, max_order):
 
 def load_data(fname='Brain24ft_v0307-Jun-2014 091700_labels.csv'):
 
-	# NOTE "nodes" are actually bars! TODO fix this naming convention
+	# NOTE "nodes" is used to refer to both nodes and bars! TODO fix this naming convention
 
 	X = np.genfromtxt(fname, delimiter=',', names=True, dtype=[('step', '|S50'), ('nodes', '|S50'), ('angles', '|S50'), ('length', '|S50')])
 	X = recfunctions.append_fields(X, 'step int', np.zeros((X.shape[0],), dtype=int))
