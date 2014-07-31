@@ -10,6 +10,9 @@ import matplotlib.patheffects as PathEffects
 import numpy.lib.recfunctions as recfunctions
 from scipy.optimize import fmin_l_bfgs_b
 
+
+np.random.seed(seed=1234)
+
 outer_colors = np.random.permutation(matplotlib.colors.cnames.keys())
 
 figsize = (15,1.8)
@@ -36,12 +39,11 @@ for tla in homophonic_node_names:
 	if tla in new_node_names:
 		node_name_mapping[tla] = tla
 		new_node_names -= set([tla])
-		print tla, node_name_mapping[tla]
 # and now assign the rest of the node names
+new_node_names = sorted(new_node_names, reverse=True)
 for tla in homophonic_node_names:
 	if tla not in node_name_mapping.keys():
 		node_name_mapping[tla] = new_node_names.pop()
-		print tla, node_name_mapping[tla]
 assert(len(new_node_names)==0) # make sure all names were used
 
 def extract_nodes(text):
@@ -205,6 +207,7 @@ def get_distances(X):
 
 	return D
 
+
 def embed_bars(X, D):
 	def f_df(z):
 		z1 = z[:X.shape[0]]
@@ -257,7 +260,7 @@ def embed_bars(X, D):
 			if ii == 0:
 				z[0,match] *= 0.8
 
-
+	# these are the bars around the outside edge of the brain.
 	fixed_node_nums = np.asarray([356, 357, 544, 653, 675, 669, 659, 631, 616, 617, 625, 635, 663, 647, 641, 567, 377])
 
 	z = np.random.randn(2, X.shape[0])/100.
