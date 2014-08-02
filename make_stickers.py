@@ -15,10 +15,14 @@ np.random.seed(seed=1234)
 
 outer_colors = np.random.permutation(matplotlib.colors.cnames.keys())
 
-figsize = (15,1.8)
+#figsize = (15,1.8)
+figsize = (7,0.938)
 
-fontsize_big = 80
-fontsize_small = 32
+# fontsize_big = 80
+# fontsize_small = 32
+fontsize_big = 43
+fontsize_big_num = 60
+fontsize_small = 18
 
 def new_node_attributes():
 	global outer_colors
@@ -76,9 +80,12 @@ def fill_color(ax, color, alpha=1.):
 
 def bar_location_diagram(ax, z, ii, color):
 	shape = mpatches.Circle([0.5, 0.5], 0.4, fill=False, linewidth=8)
+	plt.setp(shape, path_effects=[PathEffects.withStroke(linewidth=3, foreground="w")])
 	ax.add_patch(shape)
+
 	# print [z[0,ii], z[1,ii]]
 	shape = mpatches.Circle([z[0,ii]*0.4+0.5, z[1,ii]*0.4+0.5], 0.1, fill=True, facecolor='black')
+	plt.setp(shape, path_effects=[PathEffects.withStroke(linewidth=3, foreground="w")])
 	ax.add_patch(shape)
 	plt.axis('off')
 
@@ -95,6 +102,8 @@ def make_node_label(ax, num, x, max_order):
 	txt_core = tla
 	txt = plt.text(0.35,0.5, txt_core, fontsize=fontsize_big, horizontalalignment='center',
          verticalalignment='center' ) #,  backgroundcolor='white', color='black')
+	plt.setp(txt, path_effects=[PathEffects.withStroke(linewidth=3, foreground="w")])
+
 
 	node_order = x["node %d order"%(num)]
 	# if this was an in node, make it an out node
@@ -103,10 +112,13 @@ def make_node_label(ax, num, x, max_order):
 
 	txt = plt.text(0.83,0.75, "%d"%node_order, fontsize=fontsize_small, horizontalalignment='center',
          verticalalignment='center' ) #,  backgroundcolor='white', color='black')
-	txt = plt.text(0.83,0.5, "-", fontsize=fontsize_small*2, horizontalalignment='center',
+	plt.setp(txt, path_effects=[PathEffects.withStroke(linewidth=3, foreground="w")])
+	txt = plt.text(0.83,0.41, "-", fontsize=fontsize_small*2, horizontalalignment='center',
          verticalalignment='center' ) #,  backgroundcolor='white', color='black')
+	plt.setp(txt, path_effects=[PathEffects.withStroke(linewidth=3, foreground="w")])
 	txt = plt.text(0.83,0.25, "%d"%max_order[tla], fontsize=fontsize_small, horizontalalignment='center',
          verticalalignment='center' ) #,  backgroundcolor='white', color='black')
+	plt.setp(txt, path_effects=[PathEffects.withStroke(linewidth=3, foreground="w")])
 	plt.axis('off')
 
 	return attr['color']
@@ -116,6 +128,10 @@ def single_bar_figure(X, z, ii, max_order):
 
 	plt.figure(figsize=figsize)
 	# break the sticker into 3 subplots
+
+	# the size of the subplots
+	# gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1]) 
+
 
 	# the left side subplot
 	ax = plt.subplot(1,4,1)
@@ -131,8 +147,9 @@ def single_bar_figure(X, z, ii, max_order):
 	fill_color(ax, 'white')
 	fill_color(ax, color1, alpha=0.6)
 	# fill_color(ax, center_color, alpha=0.7)
-	plt.text(0.5,0.5,X[ii]['step int'], fontsize=fontsize_big,horizontalalignment='center',
+	txt = plt.text(0.5,0.5,X[ii]['step int'], fontsize=fontsize_big_num,horizontalalignment='center',
          verticalalignment='center')
+	plt.setp(txt, path_effects=[PathEffects.withStroke(linewidth=3, foreground="w")])
 	plt.axis('off')
 	ax.axis([0,1, 0, 1])
 
@@ -145,7 +162,7 @@ def single_bar_figure(X, z, ii, max_order):
 
 	plt.subplots_adjust(left=-0.0001, bottom=-0.0001, right=1.0001, top=1.0001, wspace=-0.0001, hspace=-0.0001)
 
-	fname = 'bar_label_%d.pdf'%(X[ii]['step int'])
+	fname = 'stickers/%d.pdf'%(X[ii]['step int'])
 	plt.savefig(fname)
 	plt.close()
 
