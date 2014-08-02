@@ -9,6 +9,7 @@ import re
 import matplotlib.patheffects as PathEffects
 import numpy.lib.recfunctions as recfunctions
 from scipy.optimize import fmin_l_bfgs_b
+from matplotlib import gridspec
 
 
 np.random.seed(seed=1234)
@@ -20,8 +21,8 @@ figsize = (7,0.938)
 
 # fontsize_big = 80
 # fontsize_small = 32
-fontsize_big = 43
-fontsize_big_num = 60
+fontsize_big = 45
+fontsize_big_num = 48
 fontsize_small = 18
 
 def new_node_attributes():
@@ -113,7 +114,7 @@ def make_node_label(ax, num, x, max_order):
 	txt = plt.text(0.83,0.75, "%d"%node_order, fontsize=fontsize_small, horizontalalignment='center',
          verticalalignment='center' ) #,  backgroundcolor='white', color='black')
 	plt.setp(txt, path_effects=[PathEffects.withStroke(linewidth=3, foreground="w")])
-	txt = plt.text(0.83,0.41, "-", fontsize=fontsize_small*2, horizontalalignment='center',
+	txt = plt.text(0.83,0.38, "-", fontsize=fontsize_small*2, horizontalalignment='center',
          verticalalignment='center' ) #,  backgroundcolor='white', color='black')
 	plt.setp(txt, path_effects=[PathEffects.withStroke(linewidth=3, foreground="w")])
 	txt = plt.text(0.83,0.25, "%d"%max_order[tla], fontsize=fontsize_small, horizontalalignment='center',
@@ -130,20 +131,20 @@ def single_bar_figure(X, z, ii, max_order):
 	# break the sticker into 3 subplots
 
 	# the size of the subplots
-	# gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1]) 
+	gs = gridspec.GridSpec(1, 4, width_ratios=[1., 0.7, 0.7, 1.]) 
 
 
 	# the left side subplot
-	ax = plt.subplot(1,4,1)
+	ax = plt.subplot(gs[0])
 	color1 = make_node_label(ax, 1, X[ii], max_order)
 	ax.axis([0,1, 0, 1])
 	# the right side subplot
-	ax = plt.subplot(1,4,4)
+	ax = plt.subplot(gs[3])
 	color2 = make_node_label(ax, 2, X[ii], max_order)
 	ax.axis([0,1, 0, 1])
 	
 	# the sticker number subplot
-	ax = plt.subplot(1, 4, 2)
+	ax = plt.subplot(gs[1])
 	fill_color(ax, 'white')
 	fill_color(ax, color1, alpha=0.6)
 	# fill_color(ax, center_color, alpha=0.7)
@@ -154,7 +155,7 @@ def single_bar_figure(X, z, ii, max_order):
 	ax.axis([0,1, 0, 1])
 
 	# the bar location subplot
-	ax = plt.subplot(1, 4, 3)
+	ax = plt.subplot(gs[2])
 	fill_color(ax, 'white')
 	fill_color(ax, color2, alpha=0.6)
 	bar_location_diagram(ax, z, ii, color2)
