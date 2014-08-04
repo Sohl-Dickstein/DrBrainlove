@@ -21,8 +21,8 @@ figsize = (7,0.938)
 
 # fontsize_big = 80
 # fontsize_small = 32
-fontsize_big = 45
-fontsize_big_num = 48
+fontsize_big = 42
+fontsize_big_num = 46
 fontsize_small = 18
 
 def new_node_attributes():
@@ -81,11 +81,11 @@ def fill_color(ax, color, alpha=1.):
 
 def bar_location_diagram(ax, z, ii, color):
 	shape = mpatches.Circle([0.5, 0.5], 0.4, fill=False, linewidth=8)
-	plt.setp(shape, path_effects=[PathEffects.withStroke(linewidth=3, foreground="w")])
+	# plt.setp(shape, path_effects=[PathEffects.withStroke(linewidth=3, foreground="w")])
 	ax.add_patch(shape)
 
 	# print [z[0,ii], z[1,ii]]
-	shape = mpatches.Circle([z[0,ii]*0.4+0.5, z[1,ii]*0.4+0.5], 0.1, fill=True, facecolor='black')
+	shape = mpatches.Circle([z[0,ii]*0.35+0.5, z[1,ii]*0.35+0.5], 0.15, fill=True, facecolor='black')
 	plt.setp(shape, path_effects=[PathEffects.withStroke(linewidth=3, foreground="w")])
 	ax.add_patch(shape)
 	plt.axis('off')
@@ -131,7 +131,7 @@ def single_bar_figure(X, z, ii, max_order):
 	# break the sticker into 3 subplots
 
 	# the size of the subplots
-	gs = gridspec.GridSpec(1, 4, width_ratios=[1., 0.7, 0.7, 1.]) 
+	gs = gridspec.GridSpec(1, 4, width_ratios=[1., 0.65, 0.6, 1.]) 
 
 
 	# the left side subplot
