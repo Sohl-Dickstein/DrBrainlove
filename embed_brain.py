@@ -220,7 +220,8 @@ def embed_nodes(X):
 			count[idx2] += 1
 		rad = np.sqrt(np.sum(Z**2, axis=0))
 		# subtract mean
-		Z[:,count>0] -= np.mean(Z[:,count>0], axis=1).reshape((3,1))
+		if np.sum(count>3) > 0:
+			Z[:,count>0] -= np.mean(Z[:,count>3], axis=1).reshape((3,1))
 		Z[:,count<3] = Z[:,count<3] * 300 / rad[count<3].reshape((1,-1))
 
 		print "step %d/%d, num_active %d"%(outer_loop, 700, num_active)
