@@ -115,6 +115,73 @@ def load_data(fname='Brain24ft_v0307-Jun-2014 091700_labels.csv'):
 
 
 
+def embed_nodes_warm_start(X, Z=None):
+
+	def f_df(Z, do_plot=False):
+		Z = Z.copy().reshape((3,-1))
+
+		f = 0.
+		df = np.zeros(Z.shape)
+
+		for bar in X:
+			idx1 = node_name_to_number(bar['node 1 TLA'])
+			idx2 = node_name_to_number(bar['node 2 TLA'])
+			dist = bar['bar length']
+			# dist = 1. # DEBUG
+
+			diff = Z[:,idx1] - Z[:,idx2]
+			true_dist = np.sqrt(np.sum(diff**2))
+
+			assert(true_dist > 0)
+
+			err = (true_dist - dist)**2
+
+			f += err
+
+			derrdtruedist = 2.*(true_dist - dist)
+			# derrdtruedist = 4.*(true_dist - dist)**3
+			derrddiff = derrdtruedist/true_dist*diff
+			derrdZ1 = derrddiff
+			derrdZ2 = -derrddiff
+
+			df[:,idx1] += derrdZ1
+			df[:,idx2] += derrdZ2
+
+			if do_plot:
+				err_cap = np.log(err + 0.001)					
+				err_cap = np.min([err_cap, 2.5])
+				err_cap -= np.log(0.001)
+				err_cap /= 2.5 - np.log(0.001)
+				for ijk in [(0, 1, 1, 'x', 'y'), (0, 2, 2, 'x', 'z'), (1, 2, 3, 'y', 'z')]:
+					plt.subplot(1,3,ijk[2])
+					plt.plot(
+						[Z[ijk[0],idx1], Z[ijk[0],idx2]], 
+						[Z[ijk[1],idx1], Z[ijk[1],idx2]],
+						color=[err_cap, 0., 1.-err_cap],
+						alpha=0.5
+						)
+					plt.axis('equal')
+					plt.xlabel(ijk[3])
+					plt.ylabel(ijk[4])
+
+		return f, df.ravel()
+
+	if Z is None:
+		Z = np.load('node_distance_positions_Z_warmstart.npz')['Z']
+	Z, _, _ = fmin_l_bfgs_b(
+			f_df,
+			Z.copy().ravel(),
+			disp=1,
+			maxfun=1000)
+	Z = Z.reshape((3,-1))
+	Z -= np.mean(Z, axis=1).reshape((3,1))
+
+	plt.figure()
+	f_df(Z.copy(), do_plot=True)
+
+	return Z
+
+
 def embed_nodes(X):
 
 	fig = plt.figure(figsize=[18,7])
@@ -128,10 +195,15 @@ def embed_nodes(X):
 	X = X[order]
 	proj = np.random.randn(3,3)
 	beta = 0.01
+	global iter_i
+	iter_i = 0
 
 	def f_df(Z):
 		global proj
 		global num_active
+		global iter_i
+		iter_i += 1
+
 		Z = Z.copy().reshape((3,-1))
 
 		f = 0.
@@ -142,7 +214,8 @@ def embed_nodes(X):
 
 		Zp = np.dot(proj, Z)
 
-		do_plot = (np.random.rand() < 0.002)
+		# do_plot = (np.random.rand() < 0.005)
+		do_plot = iter_i == 150
 
 		if do_plot:
 			fig.clf()
@@ -163,17 +236,6 @@ def embed_nodes(X):
 			dist = bar['bar length']
 			# dist = 1. # DEBUG
 
-			if do_plot:
-				if True: #idx1%13 == 0 or idx2 %13 == 0:
-					for ijk in [(0, 1, 1), (0, 2, 2), (1, 2, 3)]:
-						plt.subplot(1,3,ijk[2])
-						plt.plot(
-							[Zp[ijk[0],idx1], Zp[ijk[0],idx2]], 
-							[Zp[ijk[1],idx1], Zp[ijk[1],idx2]],
-							'r',
-							alpha=0.5
-							)
-
 			diff = Z[:,idx1] - Z[:,idx2]
 			true_dist = np.sqrt(np.sum(diff**2))
 
@@ -181,6 +243,21 @@ def embed_nodes(X):
 
 			err = (true_dist - dist)**2
 			# err = (true_dist - dist)**4
+
+			if do_plot:
+				if True: #idx1%13 == 0 or idx2 %13 == 0:
+					err_cap = np.log(err + 0.001)					
+					err_cap = np.min([err_cap, 2.5])
+					err_cap -= np.log(0.001)
+					err_cap /= 2.5 - np.log(0.001)
+					for ijk in [(0, 1, 1), (0, 2, 2), (1, 2, 3)]:
+						plt.subplot(1,3,ijk[2])
+						plt.plot(
+							[Zp[ijk[0],idx1], Zp[ijk[0],idx2]], 
+							[Zp[ijk[1],idx1], Zp[ijk[1],idx2]],
+							color=[err_cap, 0., 1.-err_cap],
+							alpha=0.5
+							)
 
 			f += err
 
@@ -201,8 +278,8 @@ def embed_nodes(X):
 
 	num_nodes = len(node_name_mapping)
 
-	# Z = np.random.randn(3, num_nodes)*100
-	Z = np.random.randn(3, num_nodes)/100.
+	Z = np.random.randn(3, num_nodes)*1000
+	# Z = np.random.randn(3, num_nodes)/100.
 	# Z[2,num_active:] = -2000
 
 	# Z[1,num_active:] = 0
@@ -210,7 +287,12 @@ def embed_nodes(X):
 
 	# num_active = 1000 # DEBUG
 
-	for outer_loop in range(0, 700):
+	step_length = 5
+
+	for outer_loop in range(0, 1000):
+		# start out far from the data
+		num_active += step_length
+
 		# throw any nodes that have 2 or fewer connections to the outside
 		count = np.zeros((Z.shape[1]))
 		for bar in X[:num_active]:
@@ -218,17 +300,68 @@ def embed_nodes(X):
 			idx2 = node_name_to_number(bar['node 2 TLA'])
 			count[idx1] += 1
 			count[idx2] += 1
-		rad = np.sqrt(np.sum(Z**2, axis=0))
+		# also throw the nodes attached to the new bar so they can escape any local minima
+		for bar in X[num_active-step_length:num_active]:
+			idx1 = node_name_to_number(bar['node 1 TLA'])
+			idx2 = node_name_to_number(bar['node 2 TLA'])
+			count[idx1] = 1 # lie about the count, so it gets pushed out
+			count[idx2] = 1
 		# subtract mean
-		if np.sum(count>3) > 0:
+		if np.sum(count>3) > 1:
+			print "subtracting mean"
 			Z[:,count>0] -= np.mean(Z[:,count>3], axis=1).reshape((3,1))
-		Z[:,count<3] = Z[:,count<3] * 300 / rad[count<3].reshape((1,-1))
+		rad = np.sqrt(np.sum(Z**2, axis=0))
+		Z[:,count<4] = Z[:,count<4] * 300 / rad[count<4].reshape((1,-1))
 
+		# and plop the ones that should be well defined onto the surface of a sphere
+		# avoid buckles getting frozen in
+		if num_active < 300:
+			# project onto plane
+			Z[[2],:] = 0.
+			if num_active > 100:
+				r2d = np.sqrt(np.sum(Z[0:2,:]**2, axis=0))
+				Z[[2],:] = -(r2d - np.mean(r2d))/1000.
+			 # + np.random.randn(1,Z.shape[1])/1000.
+		else:
+			# project onto sphere
+			if np.sum(count>3) > 1:
+				Z[:,count>3] = Z[:,count>3] * np.mean(rad[count>3]) / rad[count>3].reshape((1,-1))
+
+		# force the measured nodes into a plane:
+		# these are the bars around the outside edge of the brain.
+		fixed_node_nums = np.asarray([356, 357, 544, 653, 675, 669, 659, 631, 616, 617, 625, 635, 663, 647, 641, 567, 377])
+		idx_list = []
+		for bar_num in fixed_node_nums:
+			bar_idx = np.flatnonzero(X['step int']==bar_num)
+			bar = X[bar_idx]
+			idx1 = node_name_to_number(bar['node 1 TLA'])
+			idx2 = node_name_to_number(bar['node 2 TLA'])
+			idx_list.append(idx1)
+			idx_list.append(idx2)
+			if bar_num in [356, 616, 617]:
+				Z[1,idx1] = 0.
+				Z[1,idx2] = 0.
+			if bar_num == 356:
+				if Z[0,idx1] > 0.:
+					# reflect if needed
+					Z[0,:] = -Z[0,:]
+				Z[0,idx1] = -np.abs(Z[0,idx1])
+				Z[0,idx2] = -np.abs(Z[0,idx2])
+			if bar_num in [616, 617]:
+				Z[0,idx1] = np.abs(Z[0,idx1])
+				Z[0,idx2] = np.abs(Z[0,idx2])
+		idx_list = np.asarray(idx_list)
+		if np.mean(Z[2,idx_list] > 0.):
+			# reflect if needed
+			Z[2,:] = -Z[2,:]
+		Z[2,idx_list] = np.mean(Z[2,idx_list])
+
+
+		print "mean", np.mean(Z[:,count>3], axis=1)
 		print "step %d/%d, num_active %d"%(outer_loop, 700, num_active)
 		# # flatten a little -- encourage this to be the z-axis
 		# Z[2,:num_active]
-		# start out far from the data
-		num_active += 1
+		iter_i = 0
 		Z, _, _ = fmin_l_bfgs_b(
 				f_df,
 				Z.copy().ravel(),
@@ -280,23 +413,27 @@ def main():
 	X, max_order = load_data()
 
 	print "embedding nodes in 3d space"
-	Z = embed_nodes(X)
+	Z = embed_nodes_warm_start(X)
+	# Z = embed_nodes(X)
 
+	print "dumping new coordinates to a file"
+	nodes = []
+	for nm in sorted(node_name_mapping.values()):
+		idx = node_name_to_number(nm)
+		z_node = Z[:,idx].tolist()
+		connected_nodes = []
+		for bar in X:
+			if bar['node 1 TLA'] == nm:
+				connected_nodes.append(bar['node 2 TLA'])
+			if bar['node 2 TLA'] == nm:
+				connected_nodes.append(bar['node 1 TLA'])
+		node_dict = {'name':nm, 'location':z_node, 'connected_nodes':connected_nodes}
+		nodes.append(node_dict)
+	print "dictionary prepared, writing json"
+	import json
+	with open('node_info.json', 'w') as outfile:
+		json.dump(nodes, outfile)	
 
-
-
-
-
-	print "computing pairwise distances"
-	D = get_distances(X)
-
-
-	print "node counts"
-	max_order_histogram(max_order)
-
-	target_bars = range(X.shape[0]) #[1,24,354,600,333,666,42]
-	for ii in target_bars:
-		single_bar_figure(X, z, ii, max_order)
 
 if __name__ == '__main__':
 	main()
