@@ -420,14 +420,17 @@ def main():
 	nodes = []
 	for nm in sorted(node_name_mapping.values()):
 		idx = node_name_to_number(nm)
-		z_node = Z[:,idx].tolist()
+		z_node = Z[:,idx]
 		connected_nodes = []
 		for bar in X:
 			if bar['node 1 TLA'] == nm:
-				connected_nodes.append(bar['node 2 TLA'])
-			if bar['node 2 TLA'] == nm:
-				connected_nodes.append(bar['node 1 TLA'])
-		node_dict = {'name':nm, 'location':z_node, 'connected_nodes':connected_nodes}
+				connected_nm = bar['node 2 TLA']
+			else:
+				connected_nm = bar['node 1 TLA']
+			idx_connected = node_name_to_number(connected_nm)
+			z_connected = Z[:,idx_connected]
+			connected_nodes.append({'name':connected_nm, 'distance':np.sqrt(np.sum((z_node - z_connected)**2))})
+		node_dict = {'name':nm, 'location':z_node.tolist(), 'connected_nodes':connected_nodes}
 		nodes.append(node_dict)
 	print "dictionary prepared, writing json"
 	import json
