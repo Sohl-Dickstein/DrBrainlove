@@ -1,5 +1,5 @@
 import matplotlib
-# matplotlib.use('Agg')  # no displayed figures -- need to call before loading pylab
+matplotlib.use('Agg')  # no displayed figures -- need to call before loading pylab
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
@@ -113,6 +113,44 @@ def load_data(fname='Brain24ft_v0307-Jun-2014 091700_labels.csv'):
 
 	return X, max_order
 
+
+
+def plot_node_positions(X, Z):
+	subplot_coords = [(0, 1, 1, 'x', 'y'), (0, 2, 2, 'x', 'z'), (1, 2, 3, 'y', 'z')]
+
+	for node_name in node_name_mapping.values():
+		plt.figure(figsize=(6.5, 2.4))
+		for bar in X:
+			idx1 = node_name_to_number(bar['node 1 TLA'])
+			idx2 = node_name_to_number(bar['node 2 TLA'])
+			for ijk in subplot_coords:
+				plt.subplot(1,3,ijk[2])
+				plt.plot(
+					[Z[ijk[0],idx1], Z[ijk[0],idx2]], 
+					[Z[ijk[1],idx1], Z[ijk[1],idx2]],
+					color='blue',
+					alpha=0.5
+					)
+		idx = node_name_to_number(node_name)
+		for ijk in subplot_coords:
+			ax = plt.subplot(1,3,ijk[2])
+			shape = mpatches.Circle(Z[ijk[:2],idx], 12, fill=True, facecolor='red', zorder=300)
+			# plt.setp(shape, path_effects=[PathEffects.withStroke(linewidth=3, foreground="w")])
+			ax.add_patch(shape)
+			plt.axis('equal')
+			plt.xlabel(ijk[3])
+			plt.ylabel(ijk[4])
+			plt.title(" $\ $ ")
+			if ijk[2] == 1:
+				plt.gca().invert_yaxis()
+		plt.suptitle("Node name: %s"%node_name)
+		fname = 'node_locations/%s.pdf'%(node_name)
+		try:
+			plt.tight_layout()
+		except:
+			warnings.warn('tight_layout failed.  try running with an Agg backend.')
+		plt.savefig(fname)
+		plt.close()
 
 
 def embed_nodes_warm_start(X, Z=None):
@@ -415,6 +453,9 @@ def main():
 	print "embedding nodes in 3d space"
 	Z = embed_nodes_warm_start(X)
 	# Z = embed_nodes(X)
+
+	print "generating node position PDFs"
+	plot_node_positions(X, Z)
 
 	print "dumping new coordinates to a file"
 	nodes = []
