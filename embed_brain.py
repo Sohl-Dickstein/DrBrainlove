@@ -454,9 +454,6 @@ def main():
 	Z = embed_nodes_warm_start(X)
 	# Z = embed_nodes(X)
 
-	print "generating node position PDFs"
-	plot_node_positions(X, Z)
-
 	print "dumping new coordinates to a file"
 	nodes = []
 	for nm in sorted(node_name_mapping.values()):
@@ -466,17 +463,33 @@ def main():
 		for bar in X:
 			if bar['node 1 TLA'] == nm:
 				connected_nm = bar['node 2 TLA']
-			else:
+			elif bar['node 2 TLA'] == nm:
 				connected_nm = bar['node 1 TLA']
+			else:
+				continue
 			idx_connected = node_name_to_number(connected_nm)
 			z_connected = Z[:,idx_connected]
-			connected_nodes.append({'name':connected_nm, 'distance':np.sqrt(np.sum((z_node - z_connected)**2))})
+			connected_nodes.append({'name':connected_nm, 'distance':bar['bar length']})
 		node_dict = {'name':nm, 'location':z_node.tolist(), 'connected_nodes':connected_nodes}
 		nodes.append(node_dict)
 	print "dictionary prepared, writing json"
 	import json
 	with open('node_info.json', 'w') as outfile:
-		json.dump(nodes, outfile)	
+		json.dump(nodes, outfile)
+
+	# and write it as a .csv as well
+	f = open('node_info.csv', 'w')
+	# header row
+	f.write("name,x location (inches), y location (inches), z location (inches),[name and distance (inches) for all connected nodes]\n")
+	for node in nodes:
+		f.write("%s,%g,%g,%g"%(node['name'],node['location'][0],node['location'][1],node['location'][2]))
+		for connected_node in node['connected_nodes']:
+			f.write(",%s,%s"%(connected_node['name'],connected_node['distance']))
+		f.write("\n")
+	f.close()
+
+	print "generating node position PDFs"
+	plot_node_positions(X, Z)
 
 
 if __name__ == '__main__':
