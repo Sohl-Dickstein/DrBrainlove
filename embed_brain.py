@@ -446,9 +446,64 @@ def node_name_to_number(name):
 	return idx
 
 
+def add_measured_bars(X):
+	X = recfunctions.append_fields(X, 'measured bar length', np.nan*np.ones((X.shape[0],), dtype=float))
+
+	measured_raw = np.genfromtxt('measured_bar_lengths.txt', delimiter="\t")
+	measured_raw = measured_raw[1:]
+	measured_raw = measured_raw[np.isfinite(measured_raw[:,0]),:]
+
+	for row in measured_raw:
+		# find the matching step number
+		idx = np.flatnonzero(X['step int']==row[0])
+		X['measured bar length'][idx] = row[1]
+
+	return X
+
+
+def compare_measured(X):
+	gd = np.flatnonzero(np.isfinite(X['measured bar length']))
+
+	Y = X[gd]
+
+	plt.figure()
+	plt.scatter(Y['bar length'], Y['measured bar length'], alpha=0.5)
+	plt.xlabel('Ideal bar length (inches)')
+	plt.ylabel('Measured bar length (inches)')
+
+	diff = Y['measured bar length'] - Y['bar length']
+
+	plt.figure()
+	plt.scatter(Y['step int'], diff, alpha=0.7)
+	plt.xlabel('bar number')
+	plt.ylabel('Measured vs. sticker length (inches)')
+	plt.axis([0,700,-8,8])
+
+	diff -= np.median(diff)
+
+
+	plt.figure()
+	plt.hist(diff, 20)
+	plt.xlabel('Length error minus median (inches)')
+	plt.ylabel('Number of bars')
+
+	diff = np.abs(diff)
+
+	order = np.argsort(-diff)
+
+	for idx in order:
+		print "bar %d, error %g inches"%(Y['step int'][idx], diff[idx])
+
 def main():
 	print "loading data"
 	X, max_order = load_data()
+
+	X = add_measured_bars(X)
+	compare_measured(X)
+
+
+
+
 
 	print "embedding nodes in 3d space"
 	Z = embed_nodes_warm_start(X)
