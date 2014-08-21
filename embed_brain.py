@@ -141,8 +141,10 @@ def plot_node_positions(X, Z):
 			plt.xlabel(ijk[3])
 			plt.ylabel(ijk[4])
 			plt.title(" $\ $ ")
-			if ijk[2] == 1:
-				plt.gca().invert_yaxis()
+			# if ijk[2] == 1:
+			# 	plt.gca().invert_yaxis()
+			if ijk[2] == 3:
+				plt.gca().invert_xaxis()
 		plt.suptitle("Node name: %s"%node_name)
 		fname = 'node_locations/%s.pdf'%(node_name)
 		try:
@@ -492,18 +494,14 @@ def compare_measured(X):
 	order = np.argsort(-diff)
 
 	for idx in order:
-		print "bar %d, error %g inches"%(Y['step int'][idx], diff[idx])
+		print "bar %d, error %g inches, ideal %g, measured %g"%(Y['step int'][idx], diff[idx], Y['bar length'][idx], Y['measured bar length'][idx])
 
 def main():
 	print "loading data"
 	X, max_order = load_data()
 
-	X = add_measured_bars(X)
-	compare_measured(X)
-
-
-
-
+	# X = add_measured_bars(X)
+	# compare_measured(X)
 
 	print "embedding nodes in 3d space"
 	Z = embed_nodes_warm_start(X)
